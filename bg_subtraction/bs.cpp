@@ -91,9 +91,31 @@ void processVideo(char* videoFilename) {
         string frameNumberString = ss.str();
         putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
                 FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
+
+		string imageToSave = "output/output_MOG2_" + frameNumberString + ".png";
+		bool saved = imwrite(imageToSave, fgMaskMOG2);
+		if(!saved) {
+			cerr << "Unable to save " << imageToSave << endl;
+		}
+
         //show the current frame and the fg masks
+        //imshow("Frame", frame);
+        //imshow("FG Mask MOG 2", fgMaskMOG2);
+
+		cv::Mat eroded; // the destination image
+		cv::erode(fgMaskMOG2,eroded,cv::Mat());
+
+		imageToSave = "output/output_MOG2_eroded_" + frameNumberString + ".png";
+		saved = imwrite(imageToSave, eroded);
+		if(!saved) {
+			cerr << "Unable to save " << imageToSave << endl;
+		}
+
         imshow("Frame", frame);
         imshow("FG Mask MOG 2", fgMaskMOG2);
+		imshow("Eroded", eroded);
+
+
         //get the input from the keyboard
         keyboard = waitKey( 30 );
     }
@@ -131,8 +153,15 @@ void processImages(char* fistFrameFilename) {
         putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
                 FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
         //show the current frame and the fg masks
+
+		cv::Mat eroded; // the destination image
+		cv::erode(fgMaskMOG2,eroded,cv::Mat());
+
+
         imshow("Frame", frame);
         imshow("FG Mask MOG 2", fgMaskMOG2);
+		imshow("Eroded", eroded);
+		
         //get the input from the keyboard
         keyboard = waitKey( 30 );
         //search for the next image in the sequence
