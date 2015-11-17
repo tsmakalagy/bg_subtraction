@@ -23,6 +23,7 @@ void help();
 void processVideo(char* videoFilename);
 void processImages(char* firstFrameFilename);
 void endPointsSkeleton(char* filename);
+std::vector<int> getEndPoints(Mat* image);
 void help()
 {
     cout
@@ -68,6 +69,28 @@ int main(int argc, char* argv[])
 	else if(strcmp(argv[1], "-end") == 0) {
         //input data coming from a sequence of images
         endPointsSkeleton(argv[2]);
+    }
+	else if(strcmp(argv[1], "-line") == 0) {
+        //input data coming from a sequence of images
+		Mat image = Mat::zeros( 300, 300, CV_8U );
+   
+		// Draw a line 
+		line( image, Point( 15, 20 ), Point( 20, 80), Scalar( 255, 255, 255 ),  1, 4 );
+        std::vector<int> coords;		
+		//cout << "M = "<< endl << " "  << image << endl << endl;
+	
+		coords = getEndPoints(&image);
+
+		for (int i = 0; i < (int)coords.size() / 2; i++)
+		{
+			cout << "(" << coords.at(2*i+1) << "," << coords.at(2*i) << ")\n";
+			Point center = Point(coords.at(2*i+1),coords.at(2*i));
+			//Point center = Point(45, 20);
+			circle(image, center,4,CV_RGB(255,255,255),1);
+		}
+		
+		imshow("Image", image);
+		waitKey( 0 );
     }
     else {
         //error in reading input parameters
@@ -201,22 +224,40 @@ void processImages(char* fistFrameFilename) {
 
 void endPointsSkeleton(char* filename) {
     //read the file 
-    Mat im = imread(filename);
+    std::vector<int> coords;
+	Mat im = imread(filename);
     if(im.empty()){
         //error in opening the image
         cerr << "Unable to open image: " << filename << endl;
         exit(EXIT_FAILURE);
     }
+	
+	coords = getEndPoints(&im);
+
+	for (int i = 0; i < (int)coords.size() / 2; i++)
+	{
+		cout << "(" << coords.at(2*i) << "," << coords.at(2*i+1) << ")\n";
+		Point center = Point(coords.at(2*i+1),coords.at(2*i));
+		//Point center = Point(50, 5);
+		circle(im, center,1,CV_RGB(255,255,255),1);
+	}
+		
+	imshow("Image", im);
+	waitKey( 0 );
+}
+
+std::vector<int> getEndPoints(Mat *im)
+{
 	std::vector<int> coords;
 	int pix, count;
 
 	// For each pixel in our image...
-	for (int i = 1; i < im.rows-1; i++) {
-		for (int j = 1; j < im.cols-1; j++) {
+	for (int i = 1; i < im->rows-1; i++) {
+		for (int j = 1; j < im->cols-1; j++) {
 			
 
 			// See what the pixel is at this location
-			pix = im.at<uchar>(i,j);
+			pix = im->at<uchar>(i,j);
 
 			// If not a skeleton point, skip
 			if (pix == 0) {				
@@ -224,14 +265,15 @@ void endPointsSkeleton(char* filename) {
 			}
 			// Reset counter
 			count = 0;     
-
+			//cout << "(pix: " << pix << ")\n";
+			//cout << "(" << j << "," << i << ")\n";
 			// For each pixel in the neighbourhood
 			// centered at this skeleton location...
 			for (int y = -1; y <= 1; y++) {
 				for (int x = -1; x <= 1; x++) {
 
 					// Get the pixel in the neighbourhood
-					pix = im.at<uchar>(i+y,j+x);
+					pix = im->at<uchar>(i+y,j+x);
 
 					// Count if non-zero
 					if (pix != 0)
@@ -246,15 +288,6 @@ void endPointsSkeleton(char* filename) {
 			}
 		}
 	}
-
-	for (int i = 0; i < (int)coords.size() / 2; i++)
-	{
-		cout << "(" << coords.at(2*i) << "," << coords.at(2*i+1) << ")\n";
-		//Point center = Point(coords.at(2*i),coords.at(2*i+1));
-		Point center = Point(50, 5);
-		circle(im, center,1,CV_RGB(255,0,0),1);
-	}
-		
-	imshow("Image", im);
-	waitKey( 0 );
+	
+	return coords;
 }
