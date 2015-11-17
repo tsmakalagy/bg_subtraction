@@ -24,6 +24,8 @@ void processVideo(char* videoFilename);
 void processImages(char* firstFrameFilename);
 void endPointsSkeleton(char* filename);
 std::vector<int> getEndPoints(Mat* image);
+std::vector<Point> getNeighborsCoordinates(Point current_pixel);
+std::vector<int> getEndPointsMat(Mat *im);
 void help()
 {
     cout
@@ -78,7 +80,8 @@ int main(int argc, char* argv[])
 		line( image, Point( 15, 20 ), Point( 20, 80), Scalar( 255, 255, 255 ),  1, 4 );
         std::vector<int> coords;		
 		//cout << "M = "<< endl << " "  << image << endl << endl;
-	
+		Mat skeleton_coordinates = image != 0;
+		cout << "M = "<< endl << " "  << skeleton_coordinates << endl << endl;
 		coords = getEndPoints(&image);
 
 		for (int i = 0; i < (int)coords.size() / 2; i++)
@@ -251,6 +254,7 @@ std::vector<int> getEndPoints(Mat *im)
 	std::vector<int> coords;
 	int pix, count;
 
+
 	// For each pixel in our image...
 	for (int i = 1; i < im->rows-1; i++) {
 		for (int j = 1; j < im->cols-1; j++) {
@@ -290,4 +294,69 @@ std::vector<int> getEndPoints(Mat *im)
 	}
 	
 	return coords;
+}
+
+std::vector<int> getEndPointsMat(Mat *im)
+{
+	std::vector<int> coords;
+	int pix, count;
+
+	int sides[] = {4,5,6};
+	Mat skeleton_coordinates = *im != 0;
+
+	// For each pixel in our image...
+	for (int i = 1; i < im->rows-1; i++) {
+		for (int j = 1; j < im->cols-1; j++) {
+			
+
+			// See what the pixel is at this location
+			pix = im->at<uchar>(i,j);
+
+			// If not a skeleton point, skip
+			if (pix == 0) {				
+				continue;
+			}
+			// Reset counter
+			count = 0;     
+			//cout << "(pix: " << pix << ")\n";
+			//cout << "(" << j << "," << i << ")\n";
+			// For each pixel in the neighbourhood
+			// centered at this skeleton location...
+			for (int y = -1; y <= 1; y++) {
+				for (int x = -1; x <= 1; x++) {
+
+					// Get the pixel in the neighbourhood
+					pix = im->at<uchar>(i+y,j+x);
+
+					// Count if non-zero
+					if (pix != 0)
+						count++;
+				}
+			}
+
+			// If count is exactly 2, add co-ordinates to vector
+			if (count == 2) {
+				coords.push_back(i);
+				coords.push_back(j);
+			}
+		}
+	}
+	
+	return coords;
+}
+
+vector<Point> getNeighborsCoordinates(Point current_pixel)
+{
+	int xx = current_pixel.x;
+	int yy = current_pixel.y;
+	vector<Point> nbc;
+	nbc.push_back(Point(xx + 1, yy));
+	nbc.push_back(Point(xx - 1, yy));
+	nbc.push_back(Point(xx, yy + 1));
+	nbc.push_back(Point(xx, yy - 1));
+	nbc.push_back(Point(xx + 1, yy + 1));
+	nbc.push_back(Point(xx + 1, yy - 1));
+	nbc.push_back(Point(xx - 1, yy + 1));
+	nbc.push_back(Point(xx - 1, yy - 1));
+	return nbc;
 }
